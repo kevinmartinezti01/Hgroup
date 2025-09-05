@@ -1,0 +1,15 @@
+admin
+Nombre completo: Pedro Perez
+Email: admin@hgroup.com
+Contraseña: Admin123!
+
+head
+Nombre completo: Jose Lopez
+Email: director@hgroup.com
+Contraseña: Director123!
+
+restablecer contraseña 
+head
+Nombre completo: Carlos S
+Email: carlos.ortega@hgroup.consulting
+Contraseña: Carlos123!

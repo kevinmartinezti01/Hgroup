@@ -1,3 +1,21 @@
+/**
+ * Dashboard de Director - Panel de Control para Gestión de Proyectos y Operaciones
+ * 
+ * Este componente proporciona una interfaz para directores con funcionalidades
+ * de navegación entre diferentes secciones de gestión empresarial.
+ * 
+ * NOTA: Todas las funcionalidades están marcadas como "en construcción" ya que
+ * este dashboard está en fase de desarrollo inicial.
+ * 
+ * En futuras iteraciones, este código seguirá la misma estructura de refactorización
+ * que el Dashboard de Administración:
+ * - types/: Definiciones de TypeScript
+ * - services/: Lógica de API y manejo de datos
+ * - components/: Componentes reutilizables
+ * - hooks/: Custom hooks para lógica reusable
+ * - utils/: Funciones utilitarias
+ */
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import './head-dashboard.css';
@@ -9,14 +27,24 @@ import {
   faCog, faTools
 } from '@fortawesome/free-solid-svg-icons'
 
+/**
+ * Interfaz para representar los datos del usuario autenticado
+ */
 interface UserData {
   id: string;
   name: string;
   email: string;
-  role: number; 
+  role: number; // 1 = admin, 2 = head (director)
   avatar?: string;
 }
 
+/**
+ * Componente principal del Dashboard de Director
+ * 
+ * Proporciona una interfaz de navegación para gestionar diferentes áreas
+ * de la empresa como proyectos, marcas/clientes, contratos, etc.
+ * Actualmente todas las secciones muestran un mensaje de "en construcción".
+ */
 const HeadDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
@@ -27,13 +55,25 @@ const HeadDashboard: React.FC = () => {
   const [showConstruction, setShowConstruction] = useState(false);
   const [constructionMessage, setConstructionMessage] = useState("");
 
+  // URL de la API desde variables de entorno
   const API_URL = import.meta.env.VITE_API_URL;
 
-  // Cargar datos del usuario
+  /**
+   * Efecto para cargar datos del usuario al montar el componente
+   * 
+   * Verifica:
+   * 1. Existencia de token de autenticación
+   * 2. Carga datos del usuario desde localStorage
+   */
   useEffect(() => {
     loadUserData();
   }, []);
 
+  /**
+   * Carga los datos del usuario desde localStorage
+   * 
+   * Si no hay token, redirige al login
+   */
   const loadUserData = async () => {
     try {
       setIsLoading(true);
@@ -65,15 +105,28 @@ const HeadDashboard: React.FC = () => {
     }
   };
 
+  /**
+   * Maneja el cambio en el campo de búsqueda
+   * @param event - Evento de cambio del input
+   */
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
 
+  /**
+   * Muestra mensaje de funcionalidad en construcción
+   * @param message - Mensaje a mostrar
+   */
   const showConstructionMessage = (message: string) => {
     setConstructionMessage(message);
     setShowConstruction(true);
   };
 
+  /**
+   * Maneja el cierre de sesión del usuario
+   * 
+   * Intenta cerrar sesión en la API y limpia el localStorage
+   */
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -97,19 +150,37 @@ const HeadDashboard: React.FC = () => {
     }
   };
 
+  /**
+   * Maneja la acción de crear un nuevo proyecto
+   * (Actualmente muestra mensaje de construcción)
+   */
   const handleNewProject = () => {
     showConstructionMessage("Crear nuevo proyecto - Esta funcionalidad está en construcción");
   };
 
+  /**
+   * Maneja el cambio de sección en el dashboard
+   * @param section - Nombre de la sección a activar
+   */
   const handleSectionChange = (section: string) => {
     setActiveSection(section);
     showConstructionMessage(`Sección ${section} - Esta funcionalidad está en construcción`);
   };
 
+  /**
+   * Obtiene las iniciales de un nombre para mostrar en avatares
+   * @param name - Nombre completo
+   * @returns Iniciales del nombre
+   */
   const getUserInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
+  /**
+   * Obtiene el nombre del rol basado en el código numérico
+   * @param role - Código numérico del rol
+   * @returns Nombre del rol
+   */
   const getRoleName = (role: number) => {
     switch (role) {
       case 1: return 'Administrador';
@@ -118,6 +189,11 @@ const HeadDashboard: React.FC = () => {
     }
   };
 
+  /**
+   * Renderiza el contenido de la sección en construcción
+   * 
+   * @returns Componente con mensaje y características planeadas
+   */
   const renderConstructionContent = () => (
     <div className="construction-content">
       <div className="construction-icon">
@@ -148,7 +224,7 @@ const HeadDashboard: React.FC = () => {
 
   return (
     <div className="dashboard-layout-root">
-      {/* Sidebar */}
+      {/* Sidebar de Navegación */}
       <aside className="dashboard-sidebar">
         <div className="brand-header">
           <a href="#">
@@ -156,6 +232,7 @@ const HeadDashboard: React.FC = () => {
           </a>
         </div>
         
+        {/* Menú de Navegación */}
         <nav className="sidebar-nav">
           <ul>
             <li className={activeSection === 'resumen' ? 'active' : ''}>
@@ -197,6 +274,7 @@ const HeadDashboard: React.FC = () => {
           </ul>
         </nav>
         
+        {/* Pie del Sidebar con información de usuario */}
         <div className="sidebar-footer">
           <div className="user-profile">
             <div className="user-avatar">
@@ -213,9 +291,9 @@ const HeadDashboard: React.FC = () => {
         </div>
       </aside>
 
-      {/* Main Content */}
+      {/* Contenido Principal */}
       <main className="main-content">
-        {/* Header */}
+        {/* Cabecera */}
         <header className="header">
           <div className="section-header">
             <div className="header-title">
@@ -231,6 +309,7 @@ const HeadDashboard: React.FC = () => {
             </div>
 
             <div className="header-actions">
+              {/* Búsqueda (actualmente deshabilitada) */}
               <div className="search-box">
                 <FontAwesomeIcon icon={faSearch} />
                 <input 
@@ -242,10 +321,12 @@ const HeadDashboard: React.FC = () => {
                   title="Búsqueda en construcción"
                 />
               </div>
+              {/* Botón de nuevo proyecto (actualmente deshabilitado) */}
               <button onClick={handleNewProject} className="new-project-btn" disabled={true} title="Función en construcción">
                 <FontAwesomeIcon icon={faPlus} />
                 <span>Nuevo Proyecto</span>
               </button>
+              {/* Botón de refrescar */}
               <button onClick={loadUserData} className="refresh-btn">
                 <FontAwesomeIcon icon={faRefresh} />
               </button>
@@ -253,7 +334,7 @@ const HeadDashboard: React.FC = () => {
           </div>
         </header>
 
-        {/* Content Section */}
+        {/* Sección de Contenido */}
         <section className="dashboard-section">
           {error ? (
             <div className="error-message">
@@ -271,7 +352,7 @@ const HeadDashboard: React.FC = () => {
         </section>
       </main>
 
-      {/* Mensaje de Construcción */}
+      {/* Mensaje de Construcción (Modal) */}
       {showConstruction && (
         <>
           <div className="construction-overlay" onClick={() => setShowConstruction(false)}></div>

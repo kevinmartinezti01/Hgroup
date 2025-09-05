@@ -1,0 +1,86 @@
+classDiagram
+    class User {
+        +number id
+        +string uuid
+        +string name
+        +string email
+        +string password
+        +number role_id
+        +boolean is_active
+        +Date created_at
+        +Date updated_at
+        +Date last_login
+        +number failed_login_attempts
+        +Date last_failed_login
+        +findByEmail(email)$ User
+        +findById(id)$ User
+        +updateLoginInfo(id, ip)$
+        +incrementFailedAttempts(id, ip)$
+        +updatePassword(id, hashedPassword, ip)$
+    }
+
+    class Token {
+        +number id
+        +number user_id
+        +string token
+        +string type
+        +boolean revoked
+        +Date expires_at
+        +Date created_at
+        +string created_ip
+        +findRefreshToken(token)$ Token
+        +createRefreshToken(userId, token, expiresAt, ip)$
+        +revokeRefreshToken(token, ip, newToken)$
+        +revokeUserRefreshTokens(userId, ip)$
+        +createPasswordResetToken(userId, token, expiresAt, ip)$
+        +findPasswordResetToken(token)$ Token
+        +markPasswordResetTokenAsUsed(token, ip)$
+    }
+
+    class AuthActivity {
+        +number id
+        +number user_id
+        +string action
+        +string ip_address
+        +string user_agent
+        +json details
+        +Date created_at
+        +logActivity(userId, action, ip, userAgent, details)$
+    }
+
+    class AuthService {
+        +ROLES: object$
+        +login(email, password, ip, userAgent)$ AuthResponse
+        +refreshToken(refreshToken, ip, userAgent)$ TokenResponse
+        +logout(refreshToken, ip)$
+        +logoutAll(userId, ip)$
+        +getCurrentUser(userId)$ UserObject
+        +verifyRoleAccess(userId, requiredRoleId)$ boolean
+        +generateAccessToken(user)$ string
+        +generateRefreshToken(userId, ip)$ string
+        +getRolePermissions(roleId)$ string[]
+        +getDashboardPath(roleId)$ string
+    }
+
+    class PasswordService {
+        +requestReset(email, ip, userAgent)$
+        +sendPasswordResetEmail(user, token, ip, userAgent)$
+        +resetPassword(token, newPassword, ip, userAgent)$ object
+        +changePassword(userId, currentPassword, newPassword, ip, userAgent)$ object
+        +validateNewPassword(userId, newPassword)$
+        +validateResetToken(token)$ boolean
+    }
+
+    class TokenService {
+        +verifyToken(token)$ object
+        +decodeToken(token)$ object
+    }
+
+    User "1" -- "*" Token : has
+    User "1" -- "*" AuthActivity : has
+    AuthService --> User : uses
+    AuthService --> Token : uses
+    AuthService --> AuthActivity : uses
+    PasswordService --> User : uses
+    PasswordService --> Token : uses
+    PasswordService --> AuthActivity : uses

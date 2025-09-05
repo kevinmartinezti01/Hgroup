@@ -1,0 +1,386 @@
+documentacion:
+  titulo: "Documentación Técnica - Módulo 1 de Autenticación HGROUP"
+  version: "1.0.0"
+  fecha: "2024-08-24"
+  
+
+introduccion: |
+  El módulo de autenticación HGROUP es un sistema completo de gestión de acceso
+  construido con React y TypeScript que proporciona funcionalidades de login,
+  control de roles y recuperación de contraseñas. Se conecta a una API RESTful
+  mediante endpoints específicos y gestiona el flujo completo de autenticación.
+
+especificaciones:
+  stack_tecnologico:
+    frontend: "React 18+ con TypeScript"
+    build_tool: "Vite"
+    routing: "React Router DOM"
+    validation: "Zod + React Hook Form"
+    icons: "FontAwesome"
+    styling: "CSS Modules"
+    api_client: "Fetch nativo"
+    backend: "Node.js + Express"
+    database: "MySQL"
+    autenticacion: "JWT + refresh tokens"
+
+  requisitos_sistema:
+    node: "16.0+"
+    npm: "8.0+"
+    navegadores:
+      - "Chrome 90+"
+      - "Firefox 88+"
+      - "Safari 14+"
+      - "Edge 90+"
+
+  variables_entorno:
+    desarrollo:
+      - VITE_API_URL: "http://localhost:5000/api"
+      - VITE_APP_NAME: "HGROUP Platform Dev"
+    produccion:
+      - VITE_API_URL: "https://api-plataform.onrender.com/api"
+      - VITE_APP_NAME: "HGROUP Platform"
+
+instalacion:
+  clonacion: "git clone <repositorio>"
+  dependencias: "npm install"
+  desarrollo: "npm run dev"
+  acceso_local: "http://localhost:5173/"
+  build: "npm run build"
+  preview: "npm run preview"
+
+usuarios_prueba:
+  administrador:
+    email: "admin@hgroup.com"
+    password: "Admin123!"
+    rol: 1
+    descripcion: "Acceso completo al sistema, gestión de marcas y usuarios"
+    dashboard: "/admin-dashboard"
+
+  director:
+    email: "director@hgroup.com" 
+    password: "Director123!"
+    rol: 2
+    descripcion: "Acceso a dashboard ejecutivo, gestión de proyectos y contratos"
+    dashboard: "/head-dashboard"
+
+
+  notas_usuarios_prueba:
+    - "Las contraseñas cumplen con políticas de seguridad (mínimo 8 caracteres, mayúsculas, minúsculas, números)"
+    - "Los tokens de sesión expiran en 24 horas (acces token) y 7 días (refresh token)"
+    - "Para testing local, asegurar que la API esté ejecutándose en puerto 5000"
+
+componentes:
+  login:
+    proposito: "Maneja la autenticación de usuarios mediante validación de credenciales y redirección basada en roles."
+    ruta: "/login"
+    interfaces:
+      LoginFormData:
+        email: string
+        password: string
+      AuthTokens:
+        accessToken: string
+        refreshToken: string
+      UserData:
+        id: string
+        name: string
+        email: string
+        role: number
+        roleName: string
+        dashboardPath: string
+        permissions: string[]
+      LoginResponse:
+        tokens: AuthTokens
+        user: UserData
+    flujo_autenticacion:
+      - "Validación del formulario con Zod schema"
+      - "Petición POST a /auth/login"
+      - "Almacenamiento de tokens en localStorage"
+      - "Redirección según el rol del usuario"
+    endpoint:
+      metodo: "POST"
+      ruta: "/auth/login"
+      ejemplo_body:
+        email: "usuario@ejemplo.com"
+        password: "contraseñaSegura123"
+      respuesta_exitosa:
+        status: 200
+        body:
+          tokens:
+            accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            refreshToken: "def456..."
+          user:
+            id: "123e4567-e89b-12d3-a456-426614174000"
+            name: "Juan Pérez"
+            email: "juan@empresa.com"
+            role: 1
+            roleName: "admin"
+            dashboardPath: "/admin-dashboard"
+            permissions: ["brands:create", "brands:read", "brands:update", "brands:delete"]
+
+  dashboards:
+    admin:
+      rol: "Administrador (ID: 1)"
+      ruta: "/admin-dashboard"
+      funcionalidades:
+        - "Gestión completa de marcas (CRUD)"
+        - "Búsqueda, filtrado y exportación de datos"
+        - "Visualización de métricas globales"
+        - "Administración de usuarios"
+        - "Reportes del sistema"
+
+    head:
+      rol: "Director (ID: 2)"
+      ruta: "/head-dashboard" 
+      funcionalidades:
+        - "Vista ejecutiva de proyectos"
+        - "Métricas y resúmenes de performance"
+        - "Gestión de contratos y proveedores"
+        - "Seguimiento de pagos y cobranza"
+        - "Panel de control de marcas asignadas"
+
+    user:
+      rol: "Usuario (ID: 3)"
+      ruta: "/user-dashboard"
+      funcionalidades:
+        - "Visualización de proyectos asignados"
+        - "Actualización de estado de tareas"
+        - "Comunicación con equipo"
+        - "Documentación de proyectos"
+
+  recuperacion:
+    forgot_password:
+      ruta: "/forgot-password"
+      endpoint: "POST /password/request-reset"
+      ejemplo_body:
+        email: "usuario@hgroup.com"
+      respuesta_exitosa:
+        status: 200
+        body:
+          message: "Email de recuperación enviado"
+
+    reset_password:
+      ruta: "/reset-password/:token"
+      parametros: "token (en URL)"
+      endpoint: "POST /password/reset"
+      ejemplo_body:
+        token: "abc123def456"
+        newPassword: "NuevaContraseña123!"
+        confirmPassword: "NuevaContraseña123!"
+      validacion:
+        newPassword: ">= 8 caracteres, minúscula, mayúscula, número"
+        confirmPassword: "Debe coincidir con newPassword"
+
+almacenamiento:
+  metodo: "localStorage"
+  items_guardados:
+    accessToken: "JWT token para autenticación (24h expiración)"
+    refreshToken: "Token para refrescar sesión (7 días expiración)" 
+    userData: "Datos del usuario en formato JSON"
+  ejemplo_userData:
+    id: "123e4567-e89b-12d3-a456-426614174000"
+    name: "María García"
+    email: "maria@hgroup.com"
+    role: 2
+    roleName: "head"
+    dashboardPath: "/head-dashboard"
+    permissions: ["projects:read", "projects:update", "contracts:read"]
+
+api:
+  base_url: "${VITE_API_URL}"
+  endpoints_autenticacion:
+    - metodo: POST
+      ruta: "/auth/login"
+      proposito: "Autenticación de usuario"
+      auth_requerida: false
+
+    - metodo: POST
+      ruta: "/auth/logout"
+      proposito: "Cierre de sesión"
+      auth_requerida: true
+
+    - metodo: POST
+      ruta: "/auth/refresh"
+      proposito: "Refrescar token de acceso"
+      auth_requerida: true (refresh token)
+
+    - metodo: GET
+      ruta: "/auth/me"
+      proposito: "Obtener información del usuario actual"
+      auth_requerida: true
+
+  endpoints_password:
+    - metodo: POST
+      ruta: "/password/request-reset"
+      proposito: "Solicitar restablecimiento de contraseña"
+      auth_requerida: false
+
+    - metodo: POST
+      ruta: "/password/validate-token"
+      proposito: "Validar token de restablecimiento"
+      auth_requerida: false
+
+    - metodo: POST
+      ruta: "/password/reset"
+      proposito: "Restablecer contraseña"
+      auth_requerida: false
+
+  headers_autenticacion:
+    Content-Type: "application/json"
+    Authorization: "Bearer {accessToken}"
+
+  manejo_errores:
+    - "Try/catch en todas las solicitudes"
+    - "Mensajes de error específicos por tipo de error"
+    - "Reintentos automáticos para errores de red"
+    - "Fallback a datos locales cuando sea apropiado"
+
+roles:
+  sistema:
+    administrador:
+      id: 1
+      nombre: "admin"
+      dashboard: "/admin-dashboard"
+      permisos: "Acceso completo al sistema"
+
+    director:
+      id: 2
+      nombre: "head"
+      dashboard: "/head-dashboard"
+      permisos: "Gestión de proyectos, contratos y proveedores"
+
+
+  verificacion_roles: |
+    El sistema valida el rol del usuario en cada solicitud y redirige
+    automáticamente si no tiene los permisos requeridos. Los permisos
+    se verifican tanto en frontend como en backend.
+
+seguridad:
+  medidas_implementadas:
+    - "Validación de datos con Zod schemas"
+    - "Contraseñas hasheadas con bcrypt (12 rounds)"
+    - "Tokens JWT firmados con secret key"
+    - "Refresh tokens almacenados en base de datos"
+    - "Mensajes de error genéricos (no revelar información sensible)"
+    - "Validación de tokens de restablecimiento con expiración"
+    - "Limpieza automática de localStorage en logout"
+
+  prevencion_ataques:
+    - "Protección contra brute force (5 intentos → bloqueo 30min)"
+    - "Validación de emails para evitar enumeración"
+    - "Tokens CSRF protection"
+    - "Headers de seguridad HTTP"
+    - "Validación de origen de solicitudes CORS"
+
+flujos:
+  login:
+    - "Usuario accede a /login"
+    - "Ingresa credenciales (validación en tiempo real)"
+    - "Petición a /auth/login"
+    - "Almacenamiento seguro de tokens y datos de usuario"
+    - "Redirección automática al dashboard según rol"
+
+  recuperacion_password:
+    - "Usuario solicita recuperación en /forgot-password"
+    - "API envía email con token de un solo uso (1h expiración)"
+    - "Usuario accede a /reset-password?token=xxx"
+    - "Validación del token contra base de datos"
+    - "Restablecimiento de contraseña con validaciones"
+    - "Invalidación de todos los tokens previos del usuario"
+
+  logout:
+    - "Petición a /auth/logout (revoca refresh token)"
+    - "Eliminación de todos los datos de localStorage"
+    - "Redirección a /login"
+    - "Limpieza de estado de la aplicación"
+
+estilos_ux:
+  framework: "CSS modular con variables CSS custom properties"
+  iconografia: "FontAwesome (free tier)"
+  componentes_ui:
+    - "Cards responsive"
+    - "Modales accesibles"
+    - "Mensajes toast de feedback"
+    - "Indicadores de carga skeleton"
+    - "Formularios con validación visual"
+    - "Menús de navegación responsive"
+
+  principios_disenio:
+    - "Mobile-first approach"
+    - "Accesibilidad (ARIA labels, keyboard navigation)"
+    - "Consistencia visual en toda la aplicación"
+    - "Feedback inmediato al usuario"
+
+manejo_errores:
+  tipos_errores:
+    - "Errores de conexión (timeout, network issues)"
+    - "Errores de validación (formularios, datos)"
+    - "Errores de autenticación (token expirado, inválido)"
+    - "Errores de autorización (permisos insuficientes)"
+    - "Errores del servidor (500, 503)"
+
+  estrategias_manejo:
+    - "Try/catch blocks en todas las API calls"
+    - "Mensajes de error específicos por tipo"
+    - "Reintentos automáticos para errores transitorios"
+    - "Fallback a datos cached cuando sea posible"
+    - "Logging de errores en consola (dev) y servicio (prod)"
+
+proximas_mejoras:
+  refactorizacion:
+    - "Reorganizar estructura de carpetas (features-based)"
+    - "Custom hooks (useAuth, useApi, useLocalStorage)"
+    - "Gestión de estado con Context API o Zustand"
+    - "Clases de errores personalizadas"
+    - "Service workers para offline functionality"
+
+  funcionalidades_futuras:
+    - "Refresh token automático"
+    - "Verificación de sesión activa (ping interval)"
+    - "Registro de usuarios con invitaciones"
+    - "Two-factor authentication (2FA)"
+    - "Integración con OAuth providers (Google, Microsoft)"
+    - "Auditoría de seguridad mejorada"
+
+solucion_problemas:
+  problemas_comunes:
+    - error: "VITE_API_URL is not defined"
+      solucion: "Verificar archivo .env y reiniciar servidor de desarrollo"
+
+    - error: "Network Error o CORS issues"
+      solucion: "Verificar que la API esté corriendo y configurada para CORS"
+
+    - error: "Token inválido o expirado"
+      solucion: "Hacer logout/login y verificar hora del sistema"
+
+    - error: "Acceso denegado (403 Forbidden)"
+      solucion: "Verificar roles y permisos del usuario"
+
+  depuracion:
+    - "Modo desarrollo: console.log y React DevTools"
+    - "Modo producción: Sentry o servicio de logging"
+    - "Network tab para debug de API calls"
+
+despliegue:
+  entorno_desarrollo:
+    variables:
+      - VITE_API_URL: "http://localhost:5000/api"
+      - VITE_APP_NAME: "HGROUP Platform Dev"
+    comando: "npm run dev"
+
+  entorno_produccion:
+    variables:
+      - VITE_API_URL: "https://api-plataform.onrender.com/api"
+      - VITE_APP_NAME: "HGROUP Platform"
+    comando_build: "npm run build"
+    servidor: "Servidor estático "
+
+  mejores_practicas:
+    - "HTTPS obligatorio en producción"
+    - "Headers de seguridad (CSP, HSTS, X-Frame-Options)"
+    - "Compresión Gzip/Brotli habilitada"
+    - "Cache estratégico para recursos estáticos"
+    - "Monitoring y alertas de errores"
+
+contacto_soporte:
+  desarrollador: "Kevin Martinez"
+  email: "contacto.ti.kevin@gmail.com"
