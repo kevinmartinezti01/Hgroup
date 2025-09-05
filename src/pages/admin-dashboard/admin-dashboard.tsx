@@ -1,9 +1,32 @@
+/**
+ * Dashboard de Administración - Panel de Control para Gestión de Marcas
+ * 
+ * Este componente proporciona una interfaz para administrar marcas, incluyendo
+ * funcionalidades de búsqueda, filtrado, exportación y gestión de usuarios.
+ * 
+ * NOTA: En futuras iteraciones, este código será refactorizado para una mejor
+ * escalabilidad separando en:
+ * - types/: Definiciones de TypeScript
+ * - services/: Lógica de API y manejo de datos
+ * - components/: Componentes reutilizables
+ * - hooks/: Custom hooks para lógica reusable
+ * - utils/: Funciones utilitarias
+ */
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import './admin-dashboard.css';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTags, faSearch, faEllipsisV, faChartLine, faPercent, faSignOutAlt, faRefresh, faExclamationTriangle, faPlus, faDownload, faEdit, faTrash, faEye, faTimes, faUserShield } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faTags, faSearch, faEllipsisV, faChartLine, 
+  faPercent, faSignOutAlt, faRefresh, faExclamationTriangle, 
+  faPlus, faDownload, faEdit, faTrash, faEye, 
+  faTimes, faUserShield 
+} from '@fortawesome/free-solid-svg-icons';
 
+/**
+ * Interfaz para representar una Marca en el sistema
+ */
 interface Brand {
   id: string;
   nombre: string;
@@ -15,6 +38,9 @@ interface Brand {
   margen: string;
 }
 
+/**
+ * Interfaz para representar los datos del usuario autenticado
+ */
 interface UserData {
   id: string;
   name: string;
@@ -23,6 +49,12 @@ interface UserData {
   avatar?: string;
 }
 
+/**
+ * Componente principal del Dashboard de Administración
+ * 
+ * Proporciona una interfaz completa para gestionar marcas con funcionalidades
+ * de búsqueda, filtrado y exportación de datos.
+ */
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,10 +67,18 @@ const Dashboard: React.FC = () => {
   const [showConstruction, setShowConstruction] = useState(false);
   const [constructionMessage, setConstructionMessage] = useState("");
   const [accessDenied, setAccessDenied] = useState(false);
-
+  
+  // URL de la API desde variables de entorno
   const API_URL = import.meta.env.VITE_API_URL;
 
-  // Verificar rol y cargar datos
+  /**
+   * Efecto para verificar acceso y cargar datos al montar el componente
+   * 
+   * Verifica:
+   * 1. Existencia de token de autenticación
+   * 2. Rol de administrador del usuario
+   * 3. Carga inicial de datos del dashboard
+   */
   useEffect(() => {
     const checkAccessAndLoadData = async () => {
       // Obtener token del localStorage
@@ -73,7 +113,6 @@ const Dashboard: React.FC = () => {
 
           // Si es admin, cargar los datos
           await loadDashboardData();
-
         } catch (parseError) {
           console.error('Error parsing user data:', parseError);
           setError('Error al cargar datos de usuario');
@@ -88,11 +127,13 @@ const Dashboard: React.FC = () => {
     checkAccessAndLoadData();
   }, [navigate]);
 
+  /**
+   * Carga los datos del dashboard desde la API o fallback local
+   */
   const loadDashboardData = async () => {
     try {
       setIsLoading(true);
       setError(null);
-
       const token = localStorage.getItem('token');
       if (!token) return;
 
@@ -119,7 +160,6 @@ const Dashboard: React.FC = () => {
         console.warn('Error conectando con la API, usando datos locales:', apiError);
         await loadLocalBrands();
       }
-
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar el dashboard');
       console.error('Dashboard error:', err);
@@ -128,7 +168,9 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Cargar marcas locales como fallback
+  /**
+   * Carga marcas locales como fallback cuando la API no está disponible
+   */
   const loadLocalBrands = async () => {
     try {
       // Importar datos locales
@@ -141,9 +183,11 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Filtrar marcas basado en el término de búsqueda
+  /**
+   * Efecto para filtrar marcas basado en el término de búsqueda
+   */
   useEffect(() => {
-    const filtered = brands.filter(brand =>
+    const filtered = brands.filter(brand => 
       brand.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
       brand.tipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       brand.responsable.toLowerCase().includes(searchTerm.toLowerCase())
@@ -151,19 +195,33 @@ const Dashboard: React.FC = () => {
     setFilteredBrands(filtered);
   }, [searchTerm, brands]);
 
+  /**
+   * Maneja el cambio en el campo de búsqueda
+   * @param event - Evento de cambio del input
+   */
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
 
+  /**
+   * Muestra mensaje de funcionalidad en construcción
+   * @param message - Mensaje a mostrar
+   */
   const showConstructionMessage = (message: string) => {
     setConstructionMessage(message);
     setShowConstruction(true);
   };
 
+  /**
+   * Maneja el clic en una marca (actualmente muestra mensaje de construcción)
+   */
   const handleBrandClick = () => {
     showConstructionMessage("Esta funcionalidad está en construcción");
   };
 
+  /**
+   * Maneja el cierre de sesión del usuario
+   */
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -187,6 +245,9 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  /**
+   * Exporta los datos filtrados a un archivo CSV
+   */
   const exportToCSV = () => {
     const headers = ['Nombre', 'Tipo', 'Responsable', 'Ventas', 'Margen'];
     const csvData = filteredBrands.map(brand => [
@@ -205,33 +266,53 @@ const Dashboard: React.FC = () => {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    
     link.setAttribute('href', url);
     link.setAttribute('download', `marcas-${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
-    
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
+  /**
+   * Maneja la acción de agregar una nueva marca
+   */
   const handleAddBrand = () => {
     showConstructionMessage("Agregar nueva marca - Esta funcionalidad está en construcción");
   };
 
+  /**
+   * Maneja acciones sobre una marca específica (editar, eliminar, ver)
+   * @param action - Acción a realizar
+   * @param brandId - ID de la marca
+   */
   const handleBrandAction = (action: string, brandId: string) => {
     showConstructionMessage(`${action} marca - Esta funcionalidad está en construcción`);
     setActiveMenu(null);
   };
 
+  /**
+   * Alterna la visibilidad del menú de acciones para una marca
+   * @param brandId - ID de la marca
+   */
   const toggleMenu = (brandId: string) => {
     setActiveMenu(activeMenu === brandId ? null : brandId);
   };
 
+  /**
+   * Obtiene las iniciales de un nombre para mostrar en avatares
+   * @param name - Nombre completo
+   * @returns Iniciales del nombre
+   */
   const getUserInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
+  /**
+   * Obtiene el nombre del rol basado en el código numérico
+   * @param role - Código numérico del rol
+   * @returns Nombre del rol
+   */
   const getRoleName = (role: number) => {
     switch (role) {
       case 1: return 'Administrador';
@@ -321,8 +402,8 @@ const Dashboard: React.FC = () => {
                   type="text" 
                   placeholder="Buscar marca..." 
                   value={searchTerm} 
-                  onChange={handleSearchChange}
-                  disabled={isLoading}
+                  onChange={handleSearchChange} 
+                  disabled={isLoading} 
                 />
               </div>
               <div className="action-buttons">
@@ -366,7 +447,7 @@ const Dashboard: React.FC = () => {
                     </div>
                     <div className="brand-actions">
                       <button 
-                        className="menu-btn"
+                        className="menu-btn" 
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleMenu(brand.id);
@@ -405,13 +486,15 @@ const Dashboard: React.FC = () => {
                     <div className="metrics-grid">
                       <div className="metric-item">
                         <div className="metric-label">
-                          <FontAwesomeIcon icon={faChartLine} /> Ventas Mensuales
+                          <FontAwesomeIcon icon={faChartLine} />
+                          Ventas Mensuales
                         </div>
                         <div className="metric-value">{brand.ventas}</div>
                       </div>
                       <div className="metric-item">
                         <div className="metric-label">
-                          <FontAwesomeIcon icon={faPercent} /> Margen
+                          <FontAwesomeIcon icon={faPercent} />
+                          Margen
                         </div>
                         <div className="metric-value">{brand.margen}</div>
                       </div>
@@ -432,7 +515,8 @@ const Dashboard: React.FC = () => {
             <h3>🚧 En Construcción</h3>
             <p>{constructionMessage}</p>
             <button onClick={() => setShowConstruction(false)}>
-              <FontAwesomeIcon icon={faTimes} /> Entendido
+              <FontAwesomeIcon icon={faTimes} />
+              Entendido
             </button>
           </div>
         </>
